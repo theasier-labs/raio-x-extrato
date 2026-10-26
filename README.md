@@ -1,5 +1,7 @@
 # Raio-X do Extrato e do Cartão
 
+[![Testes](https://github.com/theasier-labs/raio-x-extrato/actions/workflows/testes.yml/badge.svg)](https://github.com/theasier-labs/raio-x-extrato/actions/workflows/testes.yml)
+
 O código da ferramenta gratuita da Theasier que lê o seu extrato ou a fatura do cartão **no próprio navegador** e mostra assinaturas, parcelas em aberto, tarifas, juros e quando as parcelas deixam de pesar.
 
 **A ferramenta no ar:** <https://www.theasier.com.br/ferramentas/raio-x-do-extrato>
