@@ -1,0 +1,319 @@
+<main #root id="main-content" class="rx" [attr.aria-label]="c.ariaLabel">
+  <div class="no-print">
+    <app-page-header [title]="c.heading" [sub]="c.sub" [crumbs]="[{ label: 'Início', href: '/' }, { label: 'Raio-X do Extrato', href: '/ferramentas/raio-x-do-extrato' }]" />
+  </div>
+
+  <section class="rx__start no-print" aria-label="Escolher como começar">
+    <div class="rx__inner">
+      @if (!hasInput()) {<p class="rx__how">{{ c.how }}</p>}
+      <div class="rx__actions">
+        <button #exampleButton type="button" class="rx__btn" (click)="loadExample()">{{ c.upload.exampleLabel }}</button>
+        @if (hasInput()) {
+          <button type="button" class="rx__link" (click)="clear()">{{ c.results.restart }}</button>
+        }
+      </div>
+
+      <details class="rx__manual">
+        <summary>{{ c.manual.summary }}</summary>
+        <div class="rx__manual-grid">
+          <form (submit)="onInstallmentSubmit($event, pl.value, pv.value, pr.value)">
+            <p class="rx__form-title">{{ c.manual.installmentTitle }}</p>
+            <label>{{ c.manual.labelField }} <input #pl type="text" autocomplete="off" /></label>
+            <label>{{ c.manual.valueField }} <input #pv type="text" inputmode="decimal" autocomplete="off" /></label>
+            <label>{{ c.manual.remainingField }} <input #pr type="number" min="1" max="60" /></label>
+            <button type="submit" class="rx__btn rx__btn--small">{{ c.manual.addLabel }}</button>
+          </form>
+          <form (submit)="onSubscriptionSubmit($event, sl.value, sv.value)">
+            <p class="rx__form-title">{{ c.manual.subscriptionTitle }}</p>
+            <label>{{ c.manual.labelField }} <input #sl type="text" autocomplete="off" /></label>
+            <label>{{ c.manual.valueField }} <input #sv type="text" inputmode="decimal" autocomplete="off" /></label>
+            <button type="submit" class="rx__btn rx__btn--small">{{ c.manual.addLabel }}</button>
+          </form>
+        </div>
+        @if (manualError()) {<p class="rx__error" role="alert">{{ manualError() }}</p>}
+        @if (manual().installments.length || manual().subscriptions.length) {
+          <ul class="rx__list">
+            @for (m of manual().installments; track $index) {
+              <li>{{ m.label }}: {{ formatCents(m.installmentCents) }} · faltam {{ m.remaining }} <button type="button" class="rx__link" [attr.aria-label]="'Remover ' + m.label" (click)="removeManual('installments', $index)">remover</button></li>
+            }
+            @for (m of manual().subscriptions; track $index) {
+              <li>{{ m.label }}: {{ formatCents(m.monthlyCents) }}/mês <button type="button" class="rx__link" [attr.aria-label]="'Remover ' + m.label" (click)="removeManual('subscriptions', $index)">remover</button></li>
+            }
+          </ul>
+        }
+      </details>
+
+      <details class="rx__manual rx__filebox" (toggle)="onFileBoxToggle($event)">
+        <summary>{{ c.file.summary }}</summary>
+        <p class="rx__muted">{{ c.file.recommend }}</p>
+
+        <aside class="rx__verify" aria-labelledby="rx-verify-title">
+          <h2 id="rx-verify-title" class="rx__verify-title">{{ c.verify.heading }}</h2>
+          <ul class="rx__list">
+            <li>{{ c.verify.offline }}</li>
+            <li>{{ c.verify.noThirdParty }}</li>
+            @if (sourceUrl) {<li>{{ c.verify.openCode }} <a [href]="sourceUrl" rel="noopener">{{ c.verify.openCodeLink }}</a>.</li>}
+          </ul>
+        </aside>
+
+        <div class="rx__actions">
+          <label class="rx__file">
+            <span class="rx__btn rx__btn--ghost">{{ c.upload.fileLabel }}</span>
+            <input #fileInput type="file" accept=".ofx,.csv,.txt,text/csv" (change)="onFile($event)" />
+          </label>
+        </div>
+        <p class="rx__muted">{{ c.upload.formats }}</p>
+        <label class="rx__paste">{{ c.file.pasteLabel }}
+          <textarea id="rx-paste" rows="5" autocomplete="off" spellcheck="false" [placeholder]="c.file.pastePlaceholder" [value]="pasteText()" (input)="onPaste($any($event.target).value)"></textarea>
+        </label>
+        @if (fileError()) {<p class="rx__error" role="alert">{{ fileError() }}</p>}
+
+        @if (preview(); as pv) {
+          <div class="rx__preview" role="group" aria-labelledby="rx-preview-title">
+            <h3 id="rx-preview-title" class="rx__form-title">{{ c.file.previewHeading }}</h3>
+            @if (pv.count > 0) {
+              <p>{{ fill(c.file.previewLines, { n: pv.count }) }} {{ fill(c.file.previewPeriod, { de: pv.from, ate: pv.to }) }}</p>
+              @if (pv.issues > 0) {<p class="rx__muted">{{ fill(c.file.previewIssues, { n: pv.issues }) }}</p>}
+            } @else {
+              <p class="rx__error">{{ c.file.previewEmpty }}</p>
+            }
+            <div class="rx__actions">
+              <button type="button" class="rx__btn" [disabled]="pv.count === 0" (click)="process()">{{ c.file.process }}</button>
+              <button type="button" class="rx__btn rx__btn--ghost" (click)="cancelPending()">{{ c.file.cancel }}</button>
+            </div>
+          </div>
+        }
+      </details>
+    </div>
+  </section>
+
+  <p class="rx__sr" role="status">{{ statusMessage() }}</p>
+
+  @if (statement(); as s) {
+    @if (s.issues.length) {
+      <section class="rx__section rx__issues">
+        <div class="rx__inner">
+          <h2>{{ c.results.issuesHeading }}</h2>
+          <ul class="rx__list">
+            @for (i of s.issues; track $index) {<li>Linha {{ i.line }}: {{ i.reason }}</li>}
+          </ul>
+        </div>
+      </section>
+    }
+  }
+
+  @if (report(); as r) {
+    <section class="rx__section rx__result">
+      <div class="rx__inner">
+        @if (r.possible.length) {
+          <div class="rx__callout no-print">
+            <h2 class="rx__callout-title">{{ c.results.possibleHeading }}</h2>
+            <p class="rx__muted">{{ fill(c.results.possibleAlert, { n: r.possible.length }) }} {{ c.results.possibleSub }}</p>
+            <ul class="rx__list rx__list--plain">
+              @for (p of r.possible; track p.key) {
+                <li>
+                  <span>{{ p.label }} ({{ p.current }}/{{ p.total }}, {{ formatCents(p.installmentCents) }})</span>
+                  <button type="button" class="rx__btn rx__btn--small" [attr.aria-label]="c.results.confirmLabel + ': ' + p.label" (click)="confirm(p.key)">{{ c.results.confirmLabel }}</button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div class="rx__verdict">
+          @if (sampleShown()) {<p class="rx__badge">{{ c.upload.exampleNote }}</p>}
+          <h2 #resultHeading tabindex="-1" class="rx__verdict-label">{{ c.results.verdictHeading }}</h2>
+          <p class="rx__verdict-text">
+            @if (r.breathing.alreadyBelow) {
+              {{ fill(c.results.verdictAlready, { valor: formatCents(r.breathing.thresholdCents) }) }}
+            } @else if (r.breathing.breatheMonth) {
+              {{ c.results.verdictLead }} <strong>{{ monthLabel(r.breathing.breatheMonth) }}</strong>
+            }
+          </p>
+          @if (!r.breathing.alreadyBelow) {
+            <p class="rx__muted">{{ fill(c.results.verdictDetail, { valor: formatCents(r.breathing.thresholdCents) }) }}</p>
+          }
+          <div class="rx__actions rx__actions--result no-print">
+            <button type="button" class="rx__btn" (click)="copy()">{{ copied() ? c.results.copiedLabel : c.results.copyLabel }}</button>
+            <button type="button" class="rx__btn rx__btn--ghost" (click)="print()">{{ c.results.printLabel }}</button>
+            @if (r.totals.recurringAnnual.cents > 0) {
+              <button type="button" class="rx__btn rx__btn--ghost" (click)="shareImage()">{{ c.results.shareLabel }}</button>
+            }
+            @if (sampleShown()) {
+              <button type="button" class="rx__btn rx__btn--ghost rx__present-on" (click)="present()">{{ c.present.label }}</button>
+              <button type="button" class="rx__btn rx__btn--ghost rx__present-off" (click)="exitPresent()">{{ c.present.exit }}</button>
+            }
+          </div>
+          @if (r.totals.recurringAnnual.cents > 0) {<p class="rx__muted no-print">{{ c.results.shareNote }}</p>}
+        </div>
+      </div>
+    </section>
+
+    <section class="rx__section rx__section--alt">
+      <div class="rx__inner">
+        <h2>{{ c.results.summaryHeading }}</h2>
+        <div class="rx__grid">
+          @for (n of [r.totals.recurringAnnual, r.totals.interest, r.totals.fees, r.totals.fixedLatest, r.totals.installmentsRemaining]; track n.label) {
+            <app-explainable-number [label]="n.label" [value]="n.value" [formula]="n.formula" [inputs]="n.inputs" [fonte]="n.fonte" [origem]="n.origem" />
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="rx__section">
+      <div class="rx__inner">
+        <h2>{{ c.results.cutsHeading }}</h2>
+        <p class="rx__muted">{{ c.results.cutsSub }}</p>
+        @if (r.cuts.length) {
+          <ul class="rx__rows">
+            @for (cut of r.cuts; track $index) {
+              <li>
+                <app-explainable-number [compact]="true" [label]="c.results.kindLabel[cut.kind] + ' · ' + cut.label" [value]="cut.annual.value + ' por ano'" [formula]="cut.annual.formula" [inputs]="cut.annual.inputs" [fonte]="cut.annual.fonte" [origem]="cut.annual.origem" />
+              </li>
+            }
+          </ul>
+        } @else {
+          <p>{{ c.results.emptyCuts }}</p>
+        }
+
+        @if (r.installments.length) {
+          <h2 class="rx__subhead">{{ c.results.installmentsHeading }}</h2>
+          <ul class="rx__rows">
+            @for (i of r.installments; track $index) {
+              <li>
+                <app-explainable-number [compact]="true" [label]="i.item.label + ' · ' + i.item.remaining + ' parcela(s) de ' + formatCents(i.item.installmentCents)" [value]="i.remainingTotal.value" [formula]="i.remainingTotal.formula" [inputs]="i.remainingTotal.inputs" [fonte]="i.remainingTotal.fonte" [origem]="i.remainingTotal.origem" />
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+
+    @if (r.totals.interest.cents > 0) {
+      <section class="rx__section no-print" aria-labelledby="rx-market-title">
+        <div class="rx__inner">
+          <h2 id="rx-market-title">{{ c.market.heading }}</h2>
+          <p class="rx__muted">{{ c.market.intro }}</p>
+          <div class="rx__table-wrap">
+            <table class="rx__table">
+              <caption class="rx__sr">{{ c.market.tableCaption }}</caption>
+              <thead><tr><th scope="col">{{ c.market.columns.modality }}</th><th scope="col">{{ c.market.columns.rate }}</th></tr></thead>
+              <tbody>
+                @for (m of market.itens; track m.id) {<tr><th scope="row">{{ m.label }}</th><td>{{ formatPercent(m.monthlyPercent) }}</td></tr>}
+              </tbody>
+            </table>
+          </div>
+          <p class="rx__muted">{{ fill(c.market.sourceLine, { fonte: market.fonte, mes: marketRef, data: marketDate, series: marketSeries }) }}</p>
+          <p class="rx__muted">{{ c.market.notNegotiated }}</p>
+
+          <h3 class="rx__form-title">{{ c.market.question }}</h3>
+          <div class="rx__market-form">
+            <label class="rx__field">{{ c.market.modalityLabel }}
+              <select [value]="rateKind()" (change)="rateKind.set($any($event.target).value)">
+                @for (m of market.itens; track m.id) {<option [value]="m.id">{{ m.label }}</option>}
+              </select>
+            </label>
+            <label class="rx__field">{{ c.market.rateLabel }}
+              <input type="text" inputmode="decimal" autocomplete="off" aria-describedby="rx-rate-result" [placeholder]="c.market.ratePlaceholder" [value]="rateText()" (input)="rateText.set($any($event.target).value)" />
+            </label>
+          </div>
+          <div id="rx-rate-result" aria-live="polite">
+            @if (rateComparison(); as rc) {
+              @if (rc.invalid) {
+                <p class="rx__error">{{ c.market.invalid }}</p>
+              } @else {
+                <app-explainable-number
+                  [label]="rc.verdict === 'acima' ? fill(c.market.above, { valor: rc.value }) : rc.verdict === 'abaixo' ? fill(c.market.below, { valor: rc.value }) : c.market.equal"
+                  [value]="formatPercent(rc.user) + ' ao mês'"
+                  [formula]="c.market.formula"
+                  [inputs]="[{ label: 'Sua taxa', value: formatPercent(rc.user) + ' ao mês' }, { label: rc.market.label + ' (média BCB, ' + marketRef + ')', value: formatPercent(rc.market.monthlyPercent) + ' ao mês' }, { label: 'Diferença', value: (rc.relativePercent > 0 ? '+' : '') + rc.relativePercent.toFixed(1).replace('.', ',') + '%' }]"
+                  [fonte]="market.fonte + ' (série ' + rc.market.serie + ')'"
+                  origem="regra"
+                />
+              }
+            }
+          </div>
+          <p class="rx__muted">{{ c.market.disclaimer }}</p>
+        </div>
+      </section>
+    }
+
+    <section class="rx__section rx__section--alt">
+      <div class="rx__inner">
+        <h2>{{ c.results.breathingHeading }}</h2>
+        <label class="rx__field">{{ c.results.breathingQuestion }}
+          <input type="text" inputmode="decimal" autocomplete="off" aria-describedby="rx-threshold-hint" [value]="thresholdText()" [placeholder]="formatCents(r.breathing.thresholdCents)" (input)="onThreshold($any($event.target).value)" />
+        </label>
+        @if (r.thresholdSource === 'sugerido') {<p id="rx-threshold-hint" class="rx__muted">{{ c.results.breathingSuggested }}</p>}
+        <div class="rx__table-wrap">
+          <table class="rx__table">
+            <caption class="rx__sr">Peso das parcelas confirmadas, mês a mês</caption>
+            <thead><tr><th scope="col">Mês</th><th scope="col">Parcelas no mês</th><th scope="col"><span class="rx__sr">Gráfico</span></th></tr></thead>
+            <tbody>
+              @for (p of r.breathing.series; track p.month) {
+                <tr [class.rx__row--ok]="p.commitmentCents < r.breathing.thresholdCents">
+                  <th scope="row">{{ monthLabel(p.month) }}@if (p.commitmentCents < r.breathing.thresholdCents) {<span class="rx__sr"> (abaixo de {{ formatCents(r.breathing.thresholdCents) }})</span>}</th>
+                  <td>{{ formatCents(p.commitmentCents) }}</td>
+                  <td aria-hidden="true"><span class="rx__bar" [style.width.%]="barWidth(p.commitmentCents, r.breathing.series[0]?.commitmentCents ?? 0)"></span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    @if (r.negotiation; as msg) {
+      <section class="rx__section no-print">
+        <div class="rx__inner">
+          <details class="rx__details">
+            <summary>{{ c.results.negotiationHeading }}</summary>
+            <p class="rx__muted">{{ c.results.negotiationSub }}</p>
+            <textarea class="rx__message" rows="11" [value]="msg" aria-label="Mensagem para o banco"></textarea>
+          </details>
+        </div>
+      </section>
+    }
+
+    <section class="rx__section rx__notes">
+      <div class="rx__inner">
+        <h2>{{ c.results.notesHeading }}</h2>
+        <ul class="rx__list">
+          @for (n of r.notes; track $index) {<li>{{ n }}</li>}
+        </ul>
+        <h3 class="rx__form-title">{{ c.limits.heading }}</h3>
+        <ul class="rx__list">
+          @for (l of c.limits.items; track $index) {<li>{{ l }}</li>}
+        </ul>
+        <p class="rx__disclaimer">{{ c.disclaimer }}</p>
+      </div>
+    </section>
+  }
+
+  <section class="rx__section no-print">
+    <div class="rx__inner"><app-privacy-panel /></div>
+  </section>
+
+  <section class="rx__section rx__section--alt no-print" aria-labelledby="rx-behind-title">
+    <div class="rx__inner">
+      <h2 id="rx-behind-title">{{ c.behind.heading }}</h2>
+      <p>{{ c.behind.company }}</p>
+      <ul class="rx__list rx__list--plain">
+        @if (cnpj) {<li><span>{{ c.behind.cnpjLabel }}: {{ cnpj }}</span></li>}
+        <li><span>{{ c.behind.founderLabel }}: {{ founder.name }}</span> <a [href]="founder.linkedin" rel="noopener">{{ c.behind.linkedinLabel }}</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="no-print" (click)="onCtaClick($event)">
+    <app-cta-section
+      [headline]="c.cta.headline"
+      [subheadline]="c.cta.subheadline ?? ''"
+      [ctaLabel]="c.cta.ctaLabel"
+      [ctaLink]="registerUrl"
+      [ctaSecondaryLabel]="c.cta.ctaSecondaryLabel ?? ''"
+      [ctaSecondaryLink]="c.cta.ctaSecondaryLink ?? ''"
+      variant="dark"
+    />
+  </div>
+</main>

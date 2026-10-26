@@ -1,0 +1,11 @@
+{
+  "spec_dir": "src",
+  "spec_files": [
+    "**/*.spec.ts",
+    "!**/share-image.spec.ts"
+  ],
+  "helpers": [],
+  "env": {
+    "random": false
+  }
+}

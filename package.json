@@ -1,0 +1,16 @@
+{
+  "name": "raio-x-extrato",
+  "version": "0.1.0",
+  "description": "Raio-X do Extrato e do Cartão: o código que lê o seu extrato no navegador e mostra assinaturas, parcelas, tarifas e juros.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "node --import tsx node_modules/jasmine/bin/jasmine.js --config=jasmine.json",
+    "test:seguranca": "node --test seguranca/tool-csp.test.mjs scripts/raio-x-sem-rede.test.mjs"
+  },
+  "devDependencies": {
+    "@types/jasmine": "~5.1.0",
+    "jasmine": "^5.8.0",
+    "tsx": "^4.19.0"
+  }
+}
