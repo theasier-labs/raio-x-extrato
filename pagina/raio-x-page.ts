@@ -1,4 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, ElementRef, PLATFORM_ID, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { NEXFLOW_APP_URL } from '../../../app.constants';
 import { raioXExtrato } from '../../../content';
@@ -45,7 +46,7 @@ const brDate = (iso: string): string => iso.split('-').reverse().join('/');
 @Component({
   selector: 'app-raio-x-page',
   standalone: true,
-  imports: [PageHeaderComponent, ExplainableNumberComponent, PrivacyPanelComponent, CtaSectionComponent],
+  imports: [PageHeaderComponent, ExplainableNumberComponent, PrivacyPanelComponent, CtaSectionComponent, RouterLink],
   templateUrl: './raio-x-page.html',
   styleUrl: './raio-x-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

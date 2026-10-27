@@ -305,6 +305,19 @@
     </div>
   </section>
 
+  <section class="rx__section no-print" aria-label="Como o NexFlow guarda os seus dados">
+    <div class="rx__inner">
+      <details class="rx__details rx__nexflow-data">
+        <summary>{{ c.nexflowData.summary }}</summary>
+        <p class="rx__muted">{{ c.nexflowData.intro }}</p>
+        <ul class="rx__list">
+          @for (i of c.nexflowData.items; track i.label) {<li><strong>{{ i.label }}.</strong> {{ i.text }}</li>}
+        </ul>
+        <p class="rx__muted">{{ c.nexflowData.privacyLine }} <a routerLink="/privacidade">{{ c.nexflowData.privacyLabel }}</a>.</p>
+      </details>
+    </div>
+  </section>
+
   <div class="no-print" (click)="onCtaClick($event)">
     <app-cta-section
       [headline]="c.cta.headline"

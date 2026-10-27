@@ -114,6 +114,18 @@ export const raioXExtrato: RaioXContent = {
     equal: 'A sua taxa é igual à média do mercado.',
     disclaimer: 'Comparação educativa. Uma taxa acima da média é um bom motivo para pedir uma condição melhor, e quem decide é você.',
   },
+  nexflowData: {
+    summary: 'Como o NexFlow guarda os seus dados',
+    intro: 'Aqui, no Raio-X, nada fica guardado. No NexFlow é diferente: ele precisa dos seus dados para projetar o seu mês.',
+    items: [
+      { label: 'O que guardamos', text: 'As contas, categorias e lançamentos que você cadastra ou aprova. De um arquivo importado, guardamos o nome, uma impressão digital (para não importar o mesmo arquivo duas vezes) e as linhas lidas, para você revisar. O arquivo em si não é guardado.' },
+      { label: 'Onde ficam', text: 'Em um banco de dados PostgreSQL, em servidor de nuvem. A conexão do nosso servidor com o banco é cifrada e o certificado do banco é verificado.' },
+      { label: 'Quem vê', text: 'Você, com o seu login. Ninguém da Theasier entra na sua conta como você. O painel administrativo mostra só contas e assinaturas (e-mail, nome, plano e situação da assinatura), não os seus lançamentos. Quem administra o banco de dados tem acesso técnico direto a ele.' },
+      { label: 'Como sair', text: 'Você pode apagar a sua conta e todos os seus dados. A exclusão remove tudo, inclusive o seu login.' },
+    ],
+    privacyLine: 'Os detalhes estão na',
+    privacyLabel: 'Política de Privacidade',
+  },
   present: { label: 'Apresentar em tela cheia', exit: 'Sair da tela cheia' },
   disclaimer: 'Simulação educativa. Não é aconselhamento financeiro. Os critérios usados estão explicados em cada número.',
   cta: {
