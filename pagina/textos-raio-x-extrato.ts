@@ -43,7 +43,7 @@ export const raioXExtrato: RaioXContent = {
   },
   behind: {
     heading: 'Quem está por trás',
-    company: 'A Theasier nasceu em 2017, em Natal (RN). Esta ferramenta é gratuita e não pede cadastro.',
+    company: 'A Theasier é uma empresa de Natal (RN). Esta ferramenta é gratuita e não pede cadastro.',
     cnpjLabel: 'CNPJ',
     founderLabel: 'Fundador',
     linkedinLabel: 'Eduardo no LinkedIn',

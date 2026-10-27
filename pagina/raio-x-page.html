@@ -299,7 +299,7 @@
       <h2 id="rx-behind-title">{{ c.behind.heading }}</h2>
       <p>{{ c.behind.company }}</p>
       <ul class="rx__list rx__list--plain">
-        @if (cnpj) {<li><span>{{ c.behind.cnpjLabel }}: {{ cnpj }}</span></li>}
+        @if (cnpj) {<li><span>{{ company.legalName }} · {{ c.behind.cnpjLabel }}: {{ cnpj }}</span></li>}
         <li><span>{{ c.behind.founderLabel }}: {{ founder.name }}</span> <a [href]="founder.linkedin" rel="noopener">{{ c.behind.linkedinLabel }}</a></li>
       </ul>
     </div>

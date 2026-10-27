@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, PLATFORM_ID, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { NEXFLOW_APP_URL } from '../../../app.constants';
 import { raioXExtrato } from '../../../content';
-import { COMPANY_CNPJ, FOUNDER, RAIO_X_SOURCE_URL } from '../../../content/pt-BR/site';
+import { COMPANY, COMPANY_CNPJ, FOUNDER, RAIO_X_SOURCE_URL } from '../../../content/pt-BR/site';
 import { CtaSectionComponent } from '../../../shared/components/cta-section/cta-section.component';
 import { ExplainableNumberComponent } from '../../../shared/components/explainable-number/explainable-number.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -69,6 +69,7 @@ export class RaioXPage {
   /** Endereço do código aberto e dados de identificação: vazios até o fundador decidir (D5, D6). */
   readonly sourceUrl = RAIO_X_SOURCE_URL;
   readonly cnpj = COMPANY_CNPJ;
+  readonly company = COMPANY;
   readonly founder = FOUNDER;
 
   readonly statement = signal<ParsedStatement | null>(null);
